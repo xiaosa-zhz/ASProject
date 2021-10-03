@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">GeojsonWithOsmdroid</string>
+    <string name="location_button">location</string>
+</resources>
