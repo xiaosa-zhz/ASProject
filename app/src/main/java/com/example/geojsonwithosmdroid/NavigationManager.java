@@ -245,15 +245,10 @@ public class NavigationManager {
     private static final double OUT_OF_MAP_THRESHOLD = 0.05;
     private double mLatitude = HAS_NOT_BEEN_INITIALIZED;
     private double mLongitude = HAS_NOT_BEEN_INITIALIZED;
-    private LocationTrack locationTrackService;
 
     private InternalMap.Node locationLineNodeFrom = null;
     private InternalMap.Node locationLineNodeTo = null;
     private InternalMap.Node lastProcessedUserPosition = null;
-
-    public void setLocationTrackService(LocationTrack locationTrack) {
-        this.locationTrackService = locationTrack;
-    }
 
     //search the whole map for the nearest node
     private void reloadNearestNode(InternalMap.Node locationFromNavi) {
@@ -272,6 +267,10 @@ public class NavigationManager {
                                      InternalMap.Node from,
                                      InternalMap.Node to);
         public void onOutOfTrack(InternalMap.Node lastProcessedUserLocation);
+        public void onTurnDirection(InternalMap.Node processedUserLocation,
+                                    InternalMap.Node from,
+                                    InternalMap.Node via,
+                                    InternalMap.Node to);
     }
 
     public void reloadNextTime() {
@@ -294,7 +293,7 @@ public class NavigationManager {
         return processedUserPosition;
     }
 
-    //TODO: this
+    //Algorithm to track position of user
     public void trackPosition(double latitude, double longitude,
                                     NavigationInformListener navigationInformListener) {
         InternalMap.Node locationFromNavi = new InternalMap.Node(latitude, longitude);
@@ -340,15 +339,20 @@ public class NavigationManager {
 
             if(processedUserPosition == locationLineNodeTo) {
                 if(lastProcessedUserPosition == locationLineNodeTo) {
+                    //reach an end and seem not to move
                     if(locationFromNavi.distanceFrom(locationLineNodeTo) > OUT_OF_MAP_THRESHOLD) {
                         reloadNextTime();
                         return;
                     }
                 }
+                //reach an end first time, try to move to another line
+                InternalMap.Node fvtFrom = locationLineNodeFrom;
+                InternalMap.Node fvtVia = locationLineNodeTo;
                 InternalMap.Node nodeNow = locationLineNodeTo;
                 locationLineNodeTo = null;
                 locationLineNodeFrom = nodeNow;
                 double minDistance = HAS_NOT_BEEN_INITIALIZED;
+                //search all lines nearby and move to the nearest one
                 for(InternalMap.Node nearbyNode : locationLineNodeFrom.getNodeNearby()) {
                     double newDistance = locationFromNavi.distanceFromLine(locationLineNodeFrom, nearbyNode);
                     if(newDistance < minDistance || locationLineNodeTo == null) {
@@ -356,15 +360,22 @@ public class NavigationManager {
                         locationLineNodeTo = nearbyNode;
                     }
                 }
+                InternalMap.Node fvtTo = locationLineNodeTo;
+                //after moving to a new line, recalculate user position (old one is on the old line)
                 processedUserPosition = calculatePositionOnLine(locationFromNavi);
+                navigationInformListener.onTurnDirection(processedUserPosition, fvtFrom, fvtVia, fvtTo);
             }
 
             if(lastProcessedUserPosition.distanceFrom(locationLineNodeTo)
              < processedUserPosition.distanceFrom(locationLineNodeTo)) {
-                //turn your head
+                //turn your head. turn your head is also turning direction
+                InternalMap.Node fvtFrom = locationLineNodeFrom;
+                InternalMap.Node fvtVia = locationLineNodeTo;
                 InternalMap.Node temp = locationLineNodeTo;
                 locationLineNodeTo = locationLineNodeFrom;
                 locationLineNodeFrom = temp;
+                InternalMap.Node fvtTo = locationLineNodeTo;
+                navigationInformListener.onTurnDirection(processedUserPosition, fvtFrom, fvtVia, fvtTo);
             }
 
             lastProcessedUserPosition = processedUserPosition;

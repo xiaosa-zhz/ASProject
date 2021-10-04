@@ -5,14 +5,12 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.Toast;
-import android.widget.ZoomButtonsController;
 
 import androidx.annotation.RawRes;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,14 +36,12 @@ import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
-import org.osmdroid.views.overlay.Polyline;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity {
@@ -54,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     boolean NonStartAndEndStationIsVisible;
     LocationTrack locationTrackService;
     NavigationManager navigationManager;
+    AudioManager audioManager;
 
     private void addOverlays(List<?> overlays)
     {
@@ -234,13 +231,83 @@ public class MainActivity extends AppCompatActivity {
         });
 
         navigationManager = parser.finishInternalMap();
-        navigationManager.setLocationTrackService(locationTrackService);
 //        //test
 //        System.out.println(navigationManager.getInternalMap().headGuardian.getNodeNearby().size());
 //        for(NavigationManager.InternalMap.Node node :
 //                navigationManager.getInternalMap().headGuardian.getNodeNearby()) {
 //            System.out.println(node.getRelatedMarkers().getTitle());
 //        }
+    }
+
+    //TODO: here and AudioManager.java
+    private void audioConfiguration() {
+        audioManager = new AudioManager(this);
+    }
+
+    private void setMarkerTitle(Marker me) {
+        me.setTitle("It's me!\n" + me.getPosition().getLatitude() + "\n" + me.getPosition().getLongitude());
+    }
+
+    private void navigationConfiguration() {
+        locationTrackService = new LocationTrack(this);
+        Marker me = new Marker(map);
+        double latitude = 0;
+        double longitude = 0;
+        if(locationTrackService.canGetLocation()) {
+            latitude = locationTrackService.getLatitude();
+            longitude = locationTrackService.getLongitude();
+        }
+        System.out.println(latitude);
+        System.out.println(longitude);
+        setMarkerTitle(me);
+        map.getOverlayManager().add(me);
+
+        Button locationButton = findViewById(R.id.location_button);
+        locationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                double latitude = 0;
+                double longitude = 0;
+                if(locationTrackService.canGetLocation()) {
+                    latitude = locationTrackService.getLatitude();
+                    longitude = locationTrackService.getLongitude();
+                    double finalLatitude = latitude;
+                    double finalLongitude = longitude;
+                    navigationManager.trackPosition(latitude, longitude,
+                            new NavigationManager.NavigationInformListener() {
+                                @Override
+                                public void onTrackSucceeded(
+                                        NavigationManager.InternalMap.Node processedUserLocation,
+                                        NavigationManager.InternalMap.Node from,
+                                        NavigationManager.InternalMap.Node to) {
+                                    me.setPosition(new GeoPoint(
+                                            processedUserLocation.getLatitude(),
+                                            processedUserLocation.getLongitude()));
+                                    setMarkerTitle(me);
+                                    map.invalidate();
+                                }
+
+                                @Override
+                                public void onOutOfTrack(NavigationManager.InternalMap.Node lastProcessedUserLocation) {
+                                    Toast.makeText(view.getContext() , "Out of track!", Toast.LENGTH_SHORT).show();
+                                    me.setPosition(new GeoPoint(finalLatitude, finalLongitude));
+                                    setMarkerTitle(me);
+                                    map.invalidate();
+                                }
+
+                                @Override
+                                public void onTurnDirection(NavigationManager.InternalMap.Node processedUserLocation,
+                                                            NavigationManager.InternalMap.Node from,
+                                                            NavigationManager.InternalMap.Node via,
+                                                            NavigationManager.InternalMap.Node to) {
+
+                                }
+                            });
+                } else {
+                    Toast.makeText(view.getContext(), "Can not get location now.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     @Override
@@ -277,57 +344,12 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
         });
 
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        //TODO: AudioManager
+        audioConfiguration();
         //SHALL make configuration of navigation after dynamic request of permission
-        locationTrackService = new LocationTrack(this);
-        Marker me = new Marker(map);
-        double latitude = 0;
-        double longitude = 0;
-        if(locationTrackService.canGetLocation()) {
-            latitude = locationTrackService.getLatitude();
-            longitude = locationTrackService.getLongitude();
-        }
-        System.out.println(latitude);
-        System.out.println(longitude);
-        me.setPosition(new GeoPoint(latitude, longitude));
-        me.setTitle("It's me!\n" + me.getPosition().getLatitude() + "\n" + me.getPosition().getLongitude());
-        map.getOverlayManager().add(me);
-
-        Button locationButton = findViewById(R.id.location_button);
-        locationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                double latitude = 0;
-                double longitude = 0;
-                if(locationTrackService.canGetLocation()) {
-                    latitude = locationTrackService.getLatitude();
-                    longitude = locationTrackService.getLongitude();
-                    double finalLatitude = latitude;
-                    double finalLongitude = longitude;
-                    navigationManager.trackPosition(latitude, longitude,
-                            new NavigationManager.NavigationInformListener() {
-                                @Override
-                                public void onTrackSucceeded(
-                                        NavigationManager.InternalMap.Node processedUserLocation,
-                                        NavigationManager.InternalMap.Node from,
-                                        NavigationManager.InternalMap.Node to) {
-                                    me.setPosition(new GeoPoint(
-                                            processedUserLocation.getLatitude(),
-                                            processedUserLocation.getLongitude()));
-                                    map.invalidate();
-                                }
-
-                                @Override
-                                public void onOutOfTrack(NavigationManager.InternalMap.Node lastProcessedUserLocation) {
-                                    Toast.makeText(view.getContext() , "Out of track!", Toast.LENGTH_SHORT).show();
-                                    me.setPosition(new GeoPoint(finalLatitude, finalLongitude));
-                                    map.invalidate();
-                                }
-                            });
-                } else {
-                    Toast.makeText(view.getContext(), "Can not get location now.", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        navigationConfiguration();
     }
 
     @Override
