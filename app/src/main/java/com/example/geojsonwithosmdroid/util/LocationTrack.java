@@ -1,4 +1,4 @@
-package com.example.geojsonwithosmdroid;
+package com.example.geojsonwithosmdroid.util;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -16,6 +16,8 @@ import android.provider.Settings;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
+
+import com.example.geojsonwithosmdroid.MainActivity;
 
 
 public class LocationTrack extends Service implements LocationListener {

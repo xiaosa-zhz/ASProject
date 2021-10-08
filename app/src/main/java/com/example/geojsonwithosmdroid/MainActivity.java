@@ -1,17 +1,19 @@
 package com.example.geojsonwithosmdroid;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RawRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -25,6 +27,10 @@ import com.cocoahero.android.geojson.MultiPolygon;
 import com.cocoahero.android.geojson.Polygon;
 import com.cocoahero.android.geojson.Position;
 import com.cocoahero.android.geojson.Ring;
+import com.example.geojsonwithosmdroid.util.AudioManager;
+import com.example.geojsonwithosmdroid.util.LocationTrack;
+import com.example.geojsonwithosmdroid.util.NavigationManager;
+import com.example.geojsonwithosmdroid.util.RailwayJSONParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
     LocationTrack locationTrackService;
     NavigationManager navigationManager;
     AudioManager audioManager;
+    MainActivity mainThis;
 
     private void addOverlays(List<?> overlays)
     {
@@ -60,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Deprecated
     private GeoJSONObject getGeoJSONFromRawData(@RawRes int id)
     {
         //从json文件获取地图信息
@@ -75,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         return geoJSON;
     }
 
+    @Deprecated
     private List<org.osmdroid.views.overlay.Polygon> transToOsmPolygonsFromGeoJSON(GeoJSONObject geoJSON)
     {
         //使用到的GeoJSON对象的结构：
@@ -244,10 +253,11 @@ public class MainActivity extends AppCompatActivity {
         audioManager = new AudioManager(this);
     }
 
-    private void setMarkerTitle(Marker me) {
+    private void freshMarkerTitle(Marker me) {
         me.setTitle("It's me!\n" + me.getPosition().getLatitude() + "\n" + me.getPosition().getLongitude());
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     private void navigationConfiguration() {
         locationTrackService = new LocationTrack(this);
         Marker me = new Marker(map);
@@ -259,7 +269,8 @@ public class MainActivity extends AppCompatActivity {
         }
         System.out.println(latitude);
         System.out.println(longitude);
-        setMarkerTitle(me);
+        freshMarkerTitle(me);
+        me.setIcon(getResources().getDrawable(R.drawable.ic_ditu_me));
         map.getOverlayManager().add(me);
 
         Button locationButton = findViewById(R.id.location_button);
@@ -275,23 +286,41 @@ public class MainActivity extends AppCompatActivity {
                     double finalLongitude = longitude;
                     navigationManager.trackPosition(latitude, longitude,
                             new NavigationManager.NavigationInformListener() {
+                                @SuppressLint("UseCompatLoadingForDrawables")
                                 @Override
                                 public void onTrackSucceeded(
                                         NavigationManager.InternalMap.Node processedUserLocation,
                                         NavigationManager.InternalMap.Node from,
                                         NavigationManager.InternalMap.Node to) {
+                                    //update user location
                                     me.setPosition(new GeoPoint(
                                             processedUserLocation.getLatitude(),
                                             processedUserLocation.getLongitude()));
-                                    setMarkerTitle(me);
+                                    me.setIcon(getDrawable(R.drawable.ic_ditu_me));
+                                    freshMarkerTitle(me);
+                                    //check and send alert if needed
+                                    NavigationManager.AlertDistance distance =
+                                            navigationManager.isWithinAlertDistance(
+                                                    processedUserLocation, to);
+                                    Marker marker = to.getRelatedMarkers();
+                                    if(marker != null) {
+                                        if(distance != NavigationManager.AlertDistance.NO_ALERT) {
+                                            marker.setIcon(getDrawable(R.drawable.ic_ditu_alert));
+                                            audioManager.sendVoiceAlert(distance);
+                                        } else {
+                                            marker.setIcon(getDrawable(R.drawable.ic_ditu_keypoint));
+                                        }
+                                    }
                                     map.invalidate();
                                 }
 
+                                @SuppressLint("UseCompatLoadingForDrawables")
                                 @Override
                                 public void onOutOfTrack(NavigationManager.InternalMap.Node lastProcessedUserLocation) {
                                     Toast.makeText(view.getContext() , "Out of track!", Toast.LENGTH_SHORT).show();
                                     me.setPosition(new GeoPoint(finalLatitude, finalLongitude));
-                                    setMarkerTitle(me);
+                                    me.setIcon(getDrawable(R.drawable.ic_ditu_outoftrack));
+                                    freshMarkerTitle(me);
                                     map.invalidate();
                                 }
 
@@ -300,7 +329,10 @@ public class MainActivity extends AppCompatActivity {
                                                             NavigationManager.InternalMap.Node from,
                                                             NavigationManager.InternalMap.Node via,
                                                             NavigationManager.InternalMap.Node to) {
-
+                                    Marker marker = from.getRelatedMarkers();
+                                    if(marker != null) {
+                                        marker.setIcon(getDrawable(R.drawable.ic_ditu_keypoint));
+                                    }
                                 }
                             });
                 } else {
@@ -309,6 +341,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    public static final int MENU_REQUEST = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -344,12 +378,37 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
         });
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-
         //TODO: AudioManager
         audioConfiguration();
         //SHALL make configuration of navigation after dynamic request of permission
         navigationConfiguration();
+        //menu setting
+        mainThis = this;
+        Button toMenu = findViewById(R.id.menu_button);
+        toMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(mainThis, MenuActivity.class);
+                Bundle oldSettings = new Bundle();
+                oldSettings.putSerializable("AlertLevel", navigationManager.getAlertLevel());
+                oldSettings.putBoolean("IsVoiceEnabled", audioManager.isVoiceEnabled());
+                intent.putExtras(oldSettings);
+                startActivityForResult(intent, MENU_REQUEST);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == RESULT_OK) {
+            Bundle newSettings = data.getExtras();
+            navigationManager.setAlertLevel((NavigationManager.AlertDistance)
+                    newSettings.getSerializable("AlertLevel"));
+            audioManager.setVoiceEnabled(newSettings.getBoolean("IsVoiceEnabled"));
+            System.out.println("预警距离 " + navigationManager.getAlertLevel().toValue());
+            System.out.println("语音启用 " + audioManager.isVoiceEnabled());
+        }
     }
 
     @Override

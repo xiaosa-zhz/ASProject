@@ -1,4 +1,4 @@
-package com.example.geojsonwithosmdroid;
+package com.example.geojsonwithosmdroid.util;
 
 import android.content.Context;
 
@@ -17,7 +17,6 @@ public class NavigationManager {
         return mapManager;
     }
 
-    //TODO:
     //  InternalMap:
     //      Contain a linked list
     //      Every node of list records its location, and holds references to the node nearby
@@ -45,6 +44,17 @@ public class NavigationManager {
                 this.mLongitude = longitude;
                 mNodeNearby = new ArrayList<>();
                 mRelatedMarkers = null;
+            }
+
+            //return by real distance(m)
+            public double realDistanceFrom(Node otherNode) {
+                double dLa = Math.toRadians(this.mLatitude - otherNode.mLatitude);
+                double dLo = Math.toRadians(this.mLongitude - otherNode.mLongitude);
+                double lo = Math.toRadians(this.mLatitude);
+                final double EARTH_RADIUS = 6371393;
+                return Math.sqrt(
+                        (EARTH_RADIUS * dLa) * (EARTH_RADIUS * dLa) +
+                        ((EARTH_RADIUS * Math.cos(lo) * dLo)) * (EARTH_RADIUS * Math.cos(lo) * dLo));
             }
 
             public double distanceFrom(Node otherNode) {
@@ -243,12 +253,74 @@ public class NavigationManager {
 
     private static final double HAS_NOT_BEEN_INITIALIZED = 1080;
     private static final double OUT_OF_MAP_THRESHOLD = 0.05;
-    private double mLatitude = HAS_NOT_BEEN_INITIALIZED;
-    private double mLongitude = HAS_NOT_BEEN_INITIALIZED;
+//    private double mLatitude = HAS_NOT_BEEN_INITIALIZED;
+//    private double mLongitude = HAS_NOT_BEEN_INITIALIZED;
 
     private InternalMap.Node locationLineNodeFrom = null;
     private InternalMap.Node locationLineNodeTo = null;
     private InternalMap.Node lastProcessedUserPosition = null;
+
+    public enum AlertDistance {
+        ALERT_DISTANCE50(50),
+        ALERT_DISTANCE100(100),
+        ALERT_DISTANCE200(200),
+        ALERT_DISTANCE500(500),
+        ALERT_DISTANCE1000(1000),
+        NO_ALERT(0);
+
+        double value;
+
+        AlertDistance(double v) {
+            this.value = v;
+        }
+
+        public double toValue() {
+            return value;
+        }
+    }
+
+    public static final AlertDistance[] options = {
+            AlertDistance.ALERT_DISTANCE50,
+            AlertDistance.ALERT_DISTANCE100,
+            AlertDistance.ALERT_DISTANCE200,
+            AlertDistance.ALERT_DISTANCE500,
+            AlertDistance.ALERT_DISTANCE1000
+    };
+
+    //50
+    //100
+    //200
+    //500
+    //1000
+    private AlertDistance alertLevel;
+
+    public AlertDistance getAlertLevel() {
+        return alertLevel;
+    }
+
+    public void setAlertLevel(AlertDistance alertLevel) {
+        this.alertLevel = alertLevel;
+    }
+
+    public AlertDistance isWithinAlertDistance(InternalMap.Node me, InternalMap.Node destination) {
+        double distance = me.realDistanceFrom(destination);
+        if(distance < 1000) {
+            if(distance < 500) {
+                if(distance < 200) {
+                    if(distance < 100) {
+                        if(distance < 50) {
+                            return AlertDistance.ALERT_DISTANCE50;
+                        }
+                        return AlertDistance.ALERT_DISTANCE100;
+                    }
+                    return AlertDistance.ALERT_DISTANCE200;
+                }
+                return AlertDistance.ALERT_DISTANCE500;
+            }
+            return AlertDistance.ALERT_DISTANCE1000;
+        }
+        return AlertDistance.NO_ALERT;
+    }
 
     //search the whole map for the nearest node
     private void reloadNearestNode(InternalMap.Node locationFromNavi) {

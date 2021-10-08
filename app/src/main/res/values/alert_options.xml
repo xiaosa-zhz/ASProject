@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="alert_options">
+        <item>50米内预警</item>
+        <item>100米内预警</item>
+        <item>200米内预警</item>
+        <item>500米内预警</item>
+        <item>1000米内预警</item>
+    </string-array>
+</resources>

@@ -4,10 +4,17 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/ic_ditu.xml" value="0.20638020833333334" />
+        <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/ic_ditu_alert.xml" value="0.22526041666666666" />
+        <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/ic_ditu_me.xml" value="0.22526041666666666" />
+        <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/ic_ditu_outoftrack.xml" value="0.22526041666666666" />
         <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/ic_launcher.xml" value="0.22526041666666666" />
         <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/ic_launcher_background.xml" value="0.22526041666666666" />
         <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/marker.xml" value="0.15234375" />
+        <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/drawable/spinner.xml" value="0.220703125" />
         <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/layout/activity_menu.xml" value="0.335" />
+        <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/layout/alert_options.xml" value="0.12749762131303521" />
+        <entry key="..\:/Android/Project/GeojsonWithOsmdroid/app/src/main/res/layout/spinner_item.xml" value="0.12749762131303521" />
       </map>
     </option>
   </component>
