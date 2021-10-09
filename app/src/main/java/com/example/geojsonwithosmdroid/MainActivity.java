@@ -335,6 +335,7 @@ public class MainActivity extends AppCompatActivity {
                             if(marker != null) {
                                 marker.setIcon(getDrawable(R.drawable.ic_ditu_keypoint));
                             }
+                            navigationManager.resetAlert();
                             GeoPoint positionMe = new GeoPoint(finalLatitude, finalLongitude);
                             me.setPosition(positionMe);
                             if(isLockMe) {
