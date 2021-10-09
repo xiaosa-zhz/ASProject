@@ -1,4 +1,4 @@
-package com.example.geojsonwithosmdroid;
+package com.example.geojsonwithosmdroid.util;
 
 import android.annotation.SuppressLint;
 import android.widget.Toast;
@@ -13,6 +13,7 @@ import com.cocoahero.android.geojson.GeoJSONObject;
 import com.cocoahero.android.geojson.LineString;
 import com.cocoahero.android.geojson.Point;
 import com.cocoahero.android.geojson.Position;
+import com.example.geojsonwithosmdroid.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,11 +50,11 @@ public class RailwayJSONParser {
         return mNonStartAndEndStations;
     }
 
-    RailwayJSONParser(AppCompatActivity appCompatActivity) {
+    public RailwayJSONParser(AppCompatActivity appCompatActivity) {
         activity = appCompatActivity;
         mNonStartAndEndStations = new Hashtable<>();
         mStartAndEndStations = new Hashtable<>();
-        navigationManager = new NavigationManager();
+        navigationManager = new NavigationManager(appCompatActivity);
     }
 
     public NavigationManager getNavigationManager() {
@@ -190,8 +191,8 @@ public class RailwayJSONParser {
             station.setPosition(new GeoPoint(position.getLatitude(), position.getLongitude()));
             station.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
 //            assert stationName != null;
-            station.setTitle("name: " + stationName);
-            station.setIcon(activity.getResources().getDrawable(R.drawable.ic_ditu));
+            station.setTitle(stationName);
+            station.setIcon(activity.getResources().getDrawable(R.drawable.ic_ditu_keypoint));
             //this list will be used to record related nodes in internal map
             station.setRelatedObject(new ArrayList<NavigationManager.InternalMap.Node>());
             //special configuration for start and end station

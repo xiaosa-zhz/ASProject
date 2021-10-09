@@ -1,4 +1,4 @@
-package com.example.geojsonwithosmdroid;
+package com.example.geojsonwithosmdroid.util;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

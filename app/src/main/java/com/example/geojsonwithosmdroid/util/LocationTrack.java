@@ -1,4 +1,4 @@
-package com.example.geojsonwithosmdroid;
+package com.example.geojsonwithosmdroid.util;
 
 import android.Manifest;
 import android.app.AlertDialog;
@@ -17,14 +17,14 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
+import com.example.geojsonwithosmdroid.MainActivity;
+
 
 public class LocationTrack extends Service implements LocationListener {
 
     private final Context mContext;
 
-
     boolean checkGPS = false;
-
 
     boolean checkNetwork = false;
 
@@ -202,6 +202,16 @@ public class LocationTrack extends Service implements LocationListener {
         return null;
     }
 
+    public void setLocationChangedListener(LocationChangedListener listener) {
+        this.listener = listener;
+    }
+
+    public interface LocationChangedListener {
+        void onUpdated(MainActivity mainActivity);
+    }
+
+    private LocationChangedListener listener;
+
     //update location record and markers when location is changed
     //NOTE: invalidation of mapView (UI update) SHALL only be done in UI thread
     @Override
@@ -212,7 +222,9 @@ public class LocationTrack extends Service implements LocationListener {
         getLongitude();
         //Search for railway nearby. If exist, present self on railway.
         MainActivity mainActivity = (MainActivity) mContext;
-
+        if(listener != null) {
+            listener.onUpdated(mainActivity);
+        }
     }
 
     @Override
