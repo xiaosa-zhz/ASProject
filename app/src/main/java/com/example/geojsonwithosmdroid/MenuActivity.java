@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.RemoteInput;
 
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +33,7 @@ public class MenuActivity extends AppCompatActivity {
 
     Boolean isVoiceEnabled;
     double[] alertSettings;
+    Boolean isCompassEnabled;
     EditText text1, text2, text3;
 
     @Override
@@ -44,7 +46,6 @@ public class MenuActivity extends AppCompatActivity {
         actionBar.setHomeButtonEnabled(true);
         Bundle oldSettings = getIntent().getExtras();
         isVoiceEnabled = oldSettings.getBoolean("IsVoiceEnabled");
-        //TODO: complete menu
         Button voiceSettingButton = findViewById(R.id.voice_setting_button);
         if(isVoiceEnabled) {
             voiceSettingButton.setText(R.string.menu_voice_setting_button_on);
@@ -70,6 +71,24 @@ public class MenuActivity extends AppCompatActivity {
         text2.setText(String.valueOf(alertSettings[1]));
         text3 = findViewById(R.id.alert_setting3);
         text3.setText(String.valueOf(alertSettings[2]));
+        //compass
+//        isCompassEnabled = oldSettings.getBoolean("IsCompassEnabled");
+//        Button compassButton = findViewById(R.id.compass_setting_button);
+//        compassButton.setText(isCompassEnabled ?
+//                R.string.menu_compass_button_on : R.string.menu_compass_button_off);
+//        compassButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                int id;
+//                if(isCompassEnabled) {
+//                    id = R.string.menu_compass_button_off;
+//                } else {
+//                    id = R.string.menu_compass_button_on;
+//                }
+//                compassButton.setText(id);
+//                isCompassEnabled = !isCompassEnabled;
+//            }
+//        });
     }
 
     @Override
@@ -91,6 +110,7 @@ public class MenuActivity extends AppCompatActivity {
         }
         newSettings.putDoubleArray("AlertSettings", alertSettings);
         newSettings.putBoolean("IsVoiceEnabled", isVoiceEnabled);
+//        newSettings.putBoolean("IsCompassEnabled", isCompassEnabled);
         intent.putExtras(newSettings);
         setResult(RESULT_OK, intent);
         finish();
@@ -117,6 +137,7 @@ public class MenuActivity extends AppCompatActivity {
         }
         newSettings.putDoubleArray("AlertSettings", alertSettings);
         newSettings.putBoolean("IsVoiceEnabled", isVoiceEnabled);
+//        newSettings.putBoolean("IsCompassEnabled", isCompassEnabled);
         intent.putExtras(newSettings);
         setResult(RESULT_OK, intent);
     }

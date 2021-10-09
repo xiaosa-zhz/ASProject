@@ -157,8 +157,6 @@ public class RailwayJSONParser {
 //            mNonStartAndEndStations.remove(start);
 //            mNonStartAndEndStations.remove(end);
 
-            //TODO: TODO END
-
             //Polyline contains POINTS
             //Not every point has a meaning, most of them are just part of a Polyline
 

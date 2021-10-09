@@ -11,6 +11,9 @@
     <string name="menu_alert_setting_text1">预警距离1（米）</string>
     <string name="menu_alert_setting_text2">预警距离2（米）</string>
     <string name="menu_alert_setting_text3">预警距离3（米）</string>
+    <string name="menu_compass_setting_text">指南针</string>
+    <string name="menu_compass_button_on">已开启</string>
+    <string name="menu_compass_button_off">已关闭</string>
     <string name="voice_on">语音播报已开启</string>
     <string name="voice_off">语音播报已关闭</string>
     <string name="lock_me_on">正在跟随</string>

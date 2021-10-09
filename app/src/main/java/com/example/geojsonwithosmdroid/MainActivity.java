@@ -36,12 +36,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Marker;
 import org.osmdroid.views.overlay.Overlay;
+import org.osmdroid.views.overlay.compass.CompassOverlay;
+import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -175,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final int REQUEST_PERMISSIONS_REQUEST_CODE = 1;
     public MapView map = null;
+    CompassOverlay mCompassOverlay;
 
     private void mapViewConfiguration()
     {
@@ -443,11 +449,14 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
         });
 
-        //TODO: AudioManager
         audioConfiguration();
         //SHALL make configuration of navigation after dynamic request of permission
         navigationConfiguration();
         //menu setting
+        menuAndInterfaceConfiguration();
+    }
+
+    private void menuAndInterfaceConfiguration() {
         mainThis = this;
         Button toMenu = findViewById(R.id.menu_button);
         toMenu.setOnClickListener(new View.OnClickListener() {
@@ -457,6 +466,7 @@ public class MainActivity extends AppCompatActivity {
                 Bundle oldSettings = new Bundle();
                 oldSettings.putDoubleArray("AlertSettings", navigationManager.getAlertSettings());
                 oldSettings.putBoolean("IsVoiceEnabled", audioManager.isVoiceEnabled());
+//                oldSettings.putBoolean("IsCompassEnabled", mCompassOverlay.isCompassEnabled());
                 intent.putExtras(oldSettings);
                 startActivityForResult(intent, MENU_REQUEST);
             }
@@ -487,6 +497,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        this.mCompassOverlay = new CompassOverlay(this, new InternalCompassOrientationProvider(this), map);
+        this.mCompassOverlay.enableCompass();
+        this.mCompassOverlay.setCompassCenter(50, 680);
+        map.getOverlays().add(this.mCompassOverlay);
     }
 
     boolean isLockMe;
@@ -504,6 +518,25 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 voiceButton.setText(R.string.menu_voice_setting_button_off);
             }
+//            Boolean result = newSettings.getBoolean("IsCompassEnabled");
+//            System.out.println(result);
+//            Runnable action;
+//            if(result){
+//                action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCompassOverlay.enableCompass();
+//                    }
+//                };
+//            } else {
+//                action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCompassOverlay.disableCompass();
+//                    }
+//                };
+//            }
+//            runOnUiThread(action);
 //            System.out.println("预警距离 "
 //                    + navigationManager.getAlertSettings()[0]
 //                    + navigationManager.getAlertSettings()[1]

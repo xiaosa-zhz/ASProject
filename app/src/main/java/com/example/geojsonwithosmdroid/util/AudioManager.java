@@ -21,6 +21,9 @@ public class AudioManager {
 
     public void setVoiceEnabled(boolean b) {
         String speakText;
+        if(isVoiceEnabled == b) {
+            return;
+        }
         if(b) {
             speakText = mainActivity.getString(R.string.voice_on);
         } else {
