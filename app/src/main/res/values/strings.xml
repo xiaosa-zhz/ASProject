@@ -1,11 +1,18 @@
 <resources>
     <string name="app_name">GeojsonWithOsmdroid</string>
-    <string name="location_button">LOCATION</string>
-    <string name="menu_button">MENU</string>
+    <string name="location_button">定位</string>
+    <string name="menu_button">设置</string>
     <string name="alert_speak_text_start">前方</string>
-    <string name="alert_speak_text_end">米有路口，请注意</string>
+    <string name="alert_speak_text_mid">米到达</string>
+    <string name="alert_speak_text_end">，请注意</string>
     <string name="menu_voice_setting_text">语音播报</string>
-    <string name="menu_voice_setting_button_on">开启</string>
-    <string name="menu_voice_setting_button_off">关闭</string>
-    <string name="menu_alert_setting_text">预警距离</string>
+    <string name="menu_voice_setting_button_on">语音开启</string>
+    <string name="menu_voice_setting_button_off">语音关闭</string>
+    <string name="menu_alert_setting_text1">预警距离1（米）</string>
+    <string name="menu_alert_setting_text2">预警距离2（米）</string>
+    <string name="menu_alert_setting_text3">预警距离3（米）</string>
+    <string name="voice_on">语音播报已开启</string>
+    <string name="voice_off">语音播报已关闭</string>
+    <string name="lock_me_on">正在跟随</string>
+    <string name="lock_me_off">跟随停止</string>
 </resources>

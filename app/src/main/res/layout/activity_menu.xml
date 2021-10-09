@@ -51,25 +51,82 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/alert_setting_text"
+                    android:id="@+id/alert_setting_text1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="start"
                     android:layout_weight="1"
-                    android:text="@string/menu_alert_setting_text"
+                    android:text="@string/menu_alert_setting_text1"
                     android:textColor="@color/white"
                     android:textSize="48sp"
                     android:textStyle="bold" />
 
-                <Spinner
-                    android:id="@+id/alert_setting_spinner"
-                    android:layout_width="80dp"
+                <EditText
+                    android:id="@+id/alert_setting1"
+                    android:layout_width="200dp"
                     android:layout_height="match_parent"
                     android:layout_gravity="end"
-                    android:layout_weight="1"
+                    android:inputType="number"
                     android:background="@color/white"
-                    android:textAlignment="viewEnd"
-                    android:entries="@array/alert_options" />
+                    android:textColor="@color/black"/>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/alert_setting_text2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:layout_weight="1"
+                    android:text="@string/menu_alert_setting_text2"
+                    android:textColor="@color/white"
+                    android:textSize="48sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/alert_setting2"
+                    android:layout_width="200dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end"
+                    android:inputType="number"
+                    android:background="@color/white"
+                    android:textColor="@color/black"/>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/alert_setting_text3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="start"
+                    android:layout_weight="1"
+                    android:text="@string/menu_alert_setting_text3"
+                    android:textColor="@color/white"
+                    android:textSize="48sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/alert_setting3"
+                    android:layout_width="200dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end"
+                    android:inputType="number"
+                    android:background="@color/white"
+                    android:textColor="@color/black"/>
+
+
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

@@ -54,7 +54,7 @@ public class RailwayJSONParser {
         activity = appCompatActivity;
         mNonStartAndEndStations = new Hashtable<>();
         mStartAndEndStations = new Hashtable<>();
-        navigationManager = new NavigationManager();
+        navigationManager = new NavigationManager(appCompatActivity);
     }
 
     public NavigationManager getNavigationManager() {
@@ -191,7 +191,7 @@ public class RailwayJSONParser {
             station.setPosition(new GeoPoint(position.getLatitude(), position.getLongitude()));
             station.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
 //            assert stationName != null;
-            station.setTitle("name: " + stationName);
+            station.setTitle(stationName);
             station.setIcon(activity.getResources().getDrawable(R.drawable.ic_ditu_keypoint));
             //this list will be used to record related nodes in internal map
             station.setRelatedObject(new ArrayList<NavigationManager.InternalMap.Node>());

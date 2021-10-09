@@ -202,6 +202,16 @@ public class LocationTrack extends Service implements LocationListener {
         return null;
     }
 
+    public void setLocationChangedListener(LocationChangedListener listener) {
+        this.listener = listener;
+    }
+
+    public interface LocationChangedListener {
+        void onUpdated(MainActivity mainActivity);
+    }
+
+    private LocationChangedListener listener;
+
     //update location record and markers when location is changed
     //NOTE: invalidation of mapView (UI update) SHALL only be done in UI thread
     @Override
@@ -212,7 +222,9 @@ public class LocationTrack extends Service implements LocationListener {
         getLongitude();
         //Search for railway nearby. If exist, present self on railway.
         MainActivity mainActivity = (MainActivity) mContext;
-
+        if(listener != null) {
+            listener.onUpdated(mainActivity);
+        }
     }
 
     @Override

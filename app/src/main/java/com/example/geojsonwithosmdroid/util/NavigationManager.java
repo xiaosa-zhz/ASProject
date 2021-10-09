@@ -2,16 +2,17 @@ package com.example.geojsonwithosmdroid.util;
 
 import android.content.Context;
 
+import com.example.geojsonwithosmdroid.MainActivity;
+
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Polyline;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class NavigationManager {
     Context mContext;
-    public NavigationManager(Context context) {
-        mContext = context;
-    }
 
     public MapManager getMapManager() {
         return mapManager;
@@ -39,7 +40,7 @@ public class NavigationManager {
             private Marker mRelatedMarkers;
             private boolean hasBeenReached = false;
 
-            Node(double latitude, double longitude) {
+            public Node(double latitude, double longitude) {
                 this.mLatitude = latitude;
                 this.mLongitude = longitude;
                 mNodeNearby = new ArrayList<>();
@@ -47,10 +48,18 @@ public class NavigationManager {
             }
 
             //return by real distance(m)
+            //Navi:
+            //  1.Use Math.toRadians to get la & lo in radians
+            //  2.
+            //TODO: change every distance calculation into real distance calculation
             public double realDistanceFrom(Node otherNode) {
                 double dLa = Math.toRadians(this.mLatitude - otherNode.mLatitude);
                 double dLo = Math.toRadians(this.mLongitude - otherNode.mLongitude);
                 double lo = Math.toRadians(this.mLatitude);
+                //TODO: use different setting of EARTH_RADIUS in release and debug
+                //  actual radius used in release = 6371393(m)
+                //  modify to a larger number if not sensitive in debug
+                //  note: use float literal to avoid being out of maximum
                 final double EARTH_RADIUS = 6371393;
                 return Math.sqrt(
                         (EARTH_RADIUS * dLa) * (EARTH_RADIUS * dLa) +
@@ -65,20 +74,22 @@ public class NavigationManager {
 
             public double normalizedInnerProduct(Node node1, Node node2) {
                 double lengthN1toN2 = node1.distanceFrom(node2);
-                return ((node1.getLongitude() - this.getLongitude())
+                double result = ((node1.getLongitude() - this.getLongitude())
                         * (node1.getLongitude() - node2.getLongitude())
                         - (node1.getLatitude() - this.getLatitude())
                         * (node2.getLatitude() - node1.getLatitude()))
                         / (lengthN1toN2 * lengthN1toN2);
+                return result;
             }
 
             public double normalizedOuterProduct(Node node1, Node node2) {
                 double lengthN1toN2 = node1.distanceFrom(node2);
-                return ((node1.getLongitude() - this.getLongitude())
+                double result = ((node1.getLongitude() - this.getLongitude())
                         * (node2.getLatitude() - node1.getLatitude())
                         - (node1.getLatitude() - this.getLatitude())
-                        * (node2.getLongitude() - node1.getLongitude())
-                        / (lengthN1toN2 * lengthN1toN2));
+                        * (node2.getLongitude() - node1.getLongitude()))
+                        / (lengthN1toN2 * lengthN1toN2);
+                return result;
             }
 
             //distance from the line formed by node1 and node2
@@ -87,11 +98,12 @@ public class NavigationManager {
                     return this.distanceFrom(node1);
                 }
                 double lengthN1toN2 = node1.distanceFrom(node2);
-                double r = this.normalizedOuterProduct(node1, node2);
+                double r = this.normalizedInnerProduct(node1, node2);
                 if(r > 1 || r < 0) {
                     return Math.min(this.distanceFrom(node1), this.distanceFrom(node2));
                 }
                 double s = this.normalizedOuterProduct(node1, node2);
+//                System.out.println("r: " + r + "\ns: " + s);
                 return Math.abs(s * lengthN1toN2);
             }
 
@@ -210,9 +222,11 @@ public class NavigationManager {
         return internalMap;
     }
 
-    public NavigationManager() {
+    public NavigationManager(Context context) {
         internalMap = new InternalMap();
         mapManager = new MapManager();
+        mContext = context;
+        alertSettings = new double[]{500, 1000, 2000};
     }
 
     private void implDFS(InternalMap.Node prev,
@@ -251,8 +265,8 @@ public class NavigationManager {
 
     public void testInternalMap() { }
 
-    private static final double HAS_NOT_BEEN_INITIALIZED = 1080;
-    private static final double OUT_OF_MAP_THRESHOLD = 0.05;
+    private static final double HAS_NOT_BEEN_INITIALIZED = 1145141919;
+    private static final double OUT_OF_MAP_THRESHOLD = 0.01;
 //    private double mLatitude = HAS_NOT_BEEN_INITIALIZED;
 //    private double mLongitude = HAS_NOT_BEEN_INITIALIZED;
 
@@ -260,66 +274,39 @@ public class NavigationManager {
     private InternalMap.Node locationLineNodeTo = null;
     private InternalMap.Node lastProcessedUserPosition = null;
 
-    public enum AlertDistance {
-        ALERT_DISTANCE50(50),
-        ALERT_DISTANCE100(100),
-        ALERT_DISTANCE200(200),
-        ALERT_DISTANCE500(500),
-        ALERT_DISTANCE1000(1000),
-        NO_ALERT(0);
+    private double[] alertSettings;
 
-        double value;
-
-        AlertDistance(double v) {
-            this.value = v;
-        }
-
-        public double toValue() {
-            return value;
-        }
+    public void setAlertSettings(double[] alertSettings) {
+        this.alertSettings = alertSettings;
     }
 
-    public static final AlertDistance[] options = {
-            AlertDistance.ALERT_DISTANCE50,
-            AlertDistance.ALERT_DISTANCE100,
-            AlertDistance.ALERT_DISTANCE200,
-            AlertDistance.ALERT_DISTANCE500,
-            AlertDistance.ALERT_DISTANCE1000
-    };
-
-    //50
-    //100
-    //200
-    //500
-    //1000
-    private AlertDistance alertLevel;
-
-    public AlertDistance getAlertLevel() {
-        return alertLevel;
+    public double[] getAlertSettings() {
+        return alertSettings;
     }
 
-    public void setAlertLevel(AlertDistance alertLevel) {
-        this.alertLevel = alertLevel;
+    public interface AlertDistanceListener {
+        void onGetInAlertDistance(double alertDistance, InternalMap.Node me, InternalMap.Node destination);
     }
 
-    public AlertDistance isWithinAlertDistance(InternalMap.Node me, InternalMap.Node destination) {
-        double distance = me.realDistanceFrom(destination);
-        if(distance < 1000) {
-            if(distance < 500) {
-                if(distance < 200) {
-                    if(distance < 100) {
-                        if(distance < 50) {
-                            return AlertDistance.ALERT_DISTANCE50;
-                        }
-                        return AlertDistance.ALERT_DISTANCE100;
-                    }
-                    return AlertDistance.ALERT_DISTANCE200;
-                }
-                return AlertDistance.ALERT_DISTANCE500;
+    double alertLastTime = HAS_NOT_BEEN_INITIALIZED;
+
+    public void resetAlert() {
+        alertLastTime = HAS_NOT_BEEN_INITIALIZED;
+    }
+
+    //TODO: refactor to use input box
+    public void isWithinAlertDistance(InternalMap.Node me, InternalMap.Node destination,
+                                        AlertDistanceListener listener) {
+        double minDistance = HAS_NOT_BEEN_INITIALIZED;
+        for(double alertDistance : alertSettings) {
+            if(me.realDistanceFrom(destination) < alertDistance && alertDistance < minDistance) {
+                minDistance = alertDistance;
             }
-            return AlertDistance.ALERT_DISTANCE1000;
         }
-        return AlertDistance.NO_ALERT;
+        if(minDistance != HAS_NOT_BEEN_INITIALIZED && minDistance != alertLastTime) {
+            listener.onGetInAlertDistance(minDistance, me, destination);
+            alertLastTime = minDistance;
+        }
     }
 
     //search the whole map for the nearest node
@@ -338,7 +325,9 @@ public class NavigationManager {
         public void onTrackSucceeded(InternalMap.Node processedUserLocation,
                                      InternalMap.Node from,
                                      InternalMap.Node to);
-        public void onOutOfTrack(InternalMap.Node lastProcessedUserLocation);
+        public void onOutOfTrack(InternalMap.Node lastProcessedUserLocation,
+                                 InternalMap.Node lastFrom,
+                                 InternalMap.Node lastTo);
         public void onTurnDirection(InternalMap.Node processedUserLocation,
                                     InternalMap.Node from,
                                     InternalMap.Node via,
@@ -347,8 +336,10 @@ public class NavigationManager {
 
     public void reloadNextTime() {
         locationLineNodeFrom = null;
+        locationLineNodeTo = null;
     }
 
+    //perfect performance
     public InternalMap.Node calculatePositionOnLine(InternalMap.Node locationFromNavi) {
         InternalMap.Node processedUserPosition = null;
         double factor = locationFromNavi.normalizedInnerProduct(locationLineNodeFrom, locationLineNodeTo);
@@ -362,10 +353,34 @@ public class NavigationManager {
                     locationLineNodeFrom.getLongitude() * (1 - factor) + locationLineNodeTo.getLongitude() * factor
             );
         }
+//        //DEBUG:
+//        {
+//            double sfactor = locationFromNavi.normalizedOuterProduct(locationLineNodeFrom, locationLineNodeTo);
+//            Polyline polyline = new Polyline();
+//            polyline.addPoint(new GeoPoint(locationFromNavi.mLatitude, locationFromNavi.mLongitude));
+//            GeoPoint end = new GeoPoint(
+//                    locationFromNavi.mLatitude + (locationLineNodeFrom.getLongitude() - locationLineNodeTo.getLongitude()) * sfactor,
+//                    locationFromNavi.mLongitude + (locationLineNodeTo.getLatitude() - locationLineNodeFrom.getLatitude()) * sfactor
+//            );
+//            polyline.addPoint(end);
+//            if(mContext != null) {
+//                ((MainActivity) mContext).map.getOverlayManager().add(polyline);
+//            }
+//        }
+//        //DEBUG END
         return processedUserPosition;
     }
 
     //Algorithm to track position of user
+    //TODO:
+    //  distance algorithm may not be accurate enough, HOWEVER!!!!
+    //      WARNING: move distance algorithm from 'simple treat degrees as rec coordinates'
+    //      to 'deal with real arc length and big circle relations' may improve accuracy,
+    //      but the line-drawing methods used by map engine is exactly the previous one,
+    //      which means when the real and accurate coordinates are convert back to degrees on map,
+    //      the result point may not on the line drawn by map engine
+    //  possible solution: only use real distance in line determination in corner, however,
+    //  still apply simple algorithm in marker rendering
     public void trackPosition(double latitude, double longitude,
                                     NavigationInformListener navigationInformListener) {
         InternalMap.Node locationFromNavi = new InternalMap.Node(latitude, longitude);
@@ -385,7 +400,10 @@ public class NavigationManager {
                 }
             }
             if(minDistance > OUT_OF_MAP_THRESHOLD) {
-                navigationInformListener.onOutOfTrack(lastProcessedUserPosition);
+                navigationInformListener.onOutOfTrack(
+                        lastProcessedUserPosition,
+                        locationLineNodeFrom,
+                        locationLineNodeTo);
                 reloadNextTime();
                 return;
             }
@@ -403,6 +421,10 @@ public class NavigationManager {
                 if(processedUserPosition == locationLineNodeFrom) {
                     //last and now are at the beginning of the line
                     if(locationFromNavi.distanceFrom(locationLineNodeFrom) > OUT_OF_MAP_THRESHOLD) {
+                        navigationInformListener.onOutOfTrack(
+                                lastProcessedUserPosition,
+                                locationLineNodeFrom,
+                                locationLineNodeTo);
                         reloadNextTime();
                         return;
                     }
@@ -413,6 +435,10 @@ public class NavigationManager {
                 if(lastProcessedUserPosition == locationLineNodeTo) {
                     //reach an end and seem not to move
                     if(locationFromNavi.distanceFrom(locationLineNodeTo) > OUT_OF_MAP_THRESHOLD) {
+                        navigationInformListener.onOutOfTrack(
+                                lastProcessedUserPosition,
+                                locationLineNodeFrom,
+                                locationLineNodeTo);
                         reloadNextTime();
                         return;
                     }
@@ -448,6 +474,14 @@ public class NavigationManager {
                 locationLineNodeFrom = temp;
                 InternalMap.Node fvtTo = locationLineNodeTo;
                 navigationInformListener.onTurnDirection(processedUserPosition, fvtFrom, fvtVia, fvtTo);
+            }
+
+            if(locationFromNavi.distanceFromLine(locationLineNodeFrom, locationLineNodeTo)
+                    > OUT_OF_MAP_THRESHOLD) {
+                navigationInformListener.onOutOfTrack(
+                        processedUserPosition, locationLineNodeFrom, locationLineNodeTo);
+                reloadNextTime();
+                return;
             }
 
             lastProcessedUserPosition = processedUserPosition;

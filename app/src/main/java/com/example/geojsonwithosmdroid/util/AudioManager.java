@@ -20,6 +20,13 @@ public class AudioManager {
     }
 
     public void setVoiceEnabled(boolean b) {
+        String speakText;
+        if(b) {
+            speakText = mainActivity.getString(R.string.voice_on);
+        } else {
+            speakText = mainActivity.getString(R.string.voice_off);
+        }
+        tts.speak(speakText, TextToSpeech.QUEUE_ADD, null, "voice_on_off");
         this.isVoiceEnabled = b;
     }
 
@@ -41,12 +48,13 @@ public class AudioManager {
         });
     }
 
-    public void sendVoiceAlert(NavigationManager.AlertDistance distance) {
+    public void sendVoiceAlert(double distance, String name) {
         if(isVoiceEnabled) {
             CharSequence speakText;
             String start = mainActivity.getResources().getString(R.string.alert_speak_text_start);
+            String mid = mainActivity.getResources().getString(R.string.alert_speak_text_mid);
             String end = mainActivity.getResources().getString(R.string.alert_speak_text_end);
-            speakText = start + distance.toValue() + end;
+            speakText = start + distance + mid + name + end;
             tts.speak(speakText, TextToSpeech.QUEUE_FLUSH, null, "normal_alert");
         }
     }
