@@ -499,7 +499,7 @@ public class MainActivity extends AppCompatActivity {
         });
         this.mCompassOverlay = new CompassOverlay(this, new InternalCompassOrientationProvider(this), map);
         this.mCompassOverlay.enableCompass();
-        this.mCompassOverlay.setCompassCenter(50, 680);
+        this.mCompassOverlay.setCompassCenter(50, 100);
         map.getOverlays().add(this.mCompassOverlay);
     }
 

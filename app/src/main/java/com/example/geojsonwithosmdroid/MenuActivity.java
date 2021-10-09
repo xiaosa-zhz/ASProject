@@ -66,11 +66,11 @@ public class MenuActivity extends AppCompatActivity {
         //alert option configuration
         alertSettings = oldSettings.getDoubleArray("AlertSettings");
         text1 = findViewById(R.id.alert_setting1);
-        text1.setText(String.valueOf(alertSettings[0]));
+        text1.setText(String.valueOf((int) alertSettings[0]));
         text2 = findViewById(R.id.alert_setting2);
-        text2.setText(String.valueOf(alertSettings[1]));
+        text2.setText(String.valueOf((int) alertSettings[1]));
         text3 = findViewById(R.id.alert_setting3);
-        text3.setText(String.valueOf(alertSettings[2]));
+        text3.setText(String.valueOf((int) alertSettings[2]));
         //compass
 //        isCompassEnabled = oldSettings.getBoolean("IsCompassEnabled");
 //        Button compassButton = findViewById(R.id.compass_setting_button);
